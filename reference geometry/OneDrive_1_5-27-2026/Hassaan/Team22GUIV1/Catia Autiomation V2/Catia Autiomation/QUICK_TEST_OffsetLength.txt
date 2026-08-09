@@ -1,0 +1,252 @@
+================================================================================
+CATIA BULKHEAD POWERCOPY - QUICK TEST GUIDE (OffsetLength Approach)
+================================================================================
+Date: May 26, 2026
+Updated Method: Pad.OffsetLength Property for Positioning
+
+================================================================================
+WHAT'S NEW
+================================================================================
+
+Problem Fixed:
+  - Sketches on HybridShapeOffset planes caused COMException in AddNewPad()
+  - This was a fundamental COM incompatibility in CATIA V5
+
+Solution Implemented:
+  - All sketches created on standard YZ plane (fully compatible)
+  - Pads positioned using OffsetLength property (not sketch plane offset)
+  - Result: Same 5 discrete bulkheads, different positioning method
+
+================================================================================
+TEST EXECUTION
+================================================================================
+
+STEP 1: Prepare
+  □ Visual Studio: Build > Rebuild Solution
+  □ Start CATIA V5 (manually)
+  □ Note the time/date for comparison
+
+STEP 2: Run
+  □ Run the VB.NET application
+  □ Click "Connect" button in Form1
+  □ Wait for execution to complete
+  □ Read through the log output in txtLog
+
+STEP 3: Check Results (3 places to verify)
+
+  A) LOG OUTPUT (in Form1 txtLog):
+     □ Lookfor these success messages:
+       - "[✓] Main bulkhead created successfully"
+       - "[✓] All offset planes created"
+       - "[✓] Pad offset set to X=150 mm"
+       - "[✓] Pad offset set to X=450 mm"
+       - "[✓] Pad offset set to X=850 mm"
+       - "[✓] Pad offset set to X=1200 mm"
+       - "[✓] Bulkhead_150 created at X=150 mm" (and others)
+       - "[✓] Bulkhead creation sequence completed"
+       - "== BUILD COMPLETE =="
+
+     □ Check for errors:
+       - Any [ERROR] messages = major problem
+       - [WARN] = non-fatal, check what it says
+       - "Could not set offset length" = falling back to FirstOffset
+
+  B) CATIA 3D VIEWPORT:
+     □ Look for these 5 DISCRETE hollow frames:
+       - Frame 1: At X=0-20mm (main bulkhead)
+       - Frame 2: At X=150-170mm (CLEAR GAP from frame 1)
+       - Frame 3: At X=450-470mm
+       - Frame 4: At X=850-870mm
+       - Frame 5: At X=1200-1220mm
+
+     □ Critical test: Are they SEPARATE or MERGED?
+       - SUCCESS: 5 separate frames with visible gaps
+       - FAILURE: All merged into one continuous block
+
+  C) CATIA PART TREE (left side panel):
+     □ Under "PartBody", verify these exist:
+       - Bulkhead_Frame (main)
+       - Sketch_150 + Bulkhead_150
+       - Sketch_450 + Bulkhead_450
+       - Sketch_850 + Bulkhead_850
+       - Sketch_1200 + Bulkhead_1200
+
+     □ Under "HybridBodies":
+       - Offset_Planes folder with 4 planes inside
+
+================================================================================
+EXPECTED SUCCESS OUTPUT
+================================================================================
+
+Your log should look approximately like this (exact formatting may vary):
+
+== Findus UAV : SOLID FUSELAGE BUILD ==
+Stage 1: connect + create new Part...
+   New Part created : Part1
+Stage 2: build fuselage solid with sections...
+   [STEP 1] Creating main bulkhead on YZ plane...
+      [✓] Bulkhead created: 200×200×20 mm, frame thickness: 10 mm
+      [✓] Main bulkhead created successfully
+   [STEP 2] Creating offset planes for reference...
+      [OFFSET] Creating offset plane at X=150 mm...
+         [✓] Offset plane created
+      [OFFSET] Creating offset plane at X=450 mm...
+         [✓] Offset plane created
+      [OFFSET] Creating offset plane at X=850 mm...
+         [✓] Offset plane created
+      [OFFSET] Creating offset plane at X=1200 mm...
+         [✓] Offset plane created
+      [✓] All offset planes created
+   [STEP 3] Creating bulkheads using OffsetLength property...
+      [BULKHEAD 1] Creating at X=150 mm...
+         [✓] Pad offset set to X=150 mm
+         [✓] Bulkhead_150 created at X=150 mm
+      [BULKHEAD 2] Creating at X=450 mm...
+         [✓] Pad offset set to X=450 mm
+         [✓] Bulkhead_450 created at X=450 mm
+      [BULKHEAD 3] Creating at X=850 mm...
+         [✓] Pad offset set to X=850 mm
+         [✓] Bulkhead_850 created at X=850 mm
+      [BULKHEAD 4] Creating at X=1200 mm...
+         [✓] Pad offset set to X=1200 mm
+         [✓] Bulkhead_1200 created at X=1200 mm
+      [✓] Bulkhead creation sequence completed
+   Bulkheads (PowerCopy)  : Created [OK]
+== BUILD COMPLETE ==
+
+================================================================================
+POSSIBLE VARIATIONS & WHAT THEY MEAN
+================================================================================
+
+VARIATION 1: "Pad offset set to X=XXX mm" then "[✓] Bulkhead_XXX created"
+  → OffsetLength worked! Perfect. Everything should be correct.
+
+VARIATION 2: "[WARN] Could not set offset length: ..." then "[✓] Pad offset set to X=XXX mm"
+  → OffsetLength property name was wrong, but FirstOffset worked!
+  → This is fine. Bulkheads should still be at correct positions.
+  → Just means the property is named "FirstOffset" in your CATIA version.
+
+VARIATION 3: Both "[WARN] Could not set offset length" AND "[WARN] FirstOffset also failed"
+  → Both property names failed
+  → Bulkheads were created but may all be at X=0 (overlapped)
+  → See TROUBLESHOOTING section below
+
+VARIATION 4: "[WARN] Bulkhead_XXX creation failed: COM Exception" for some bulkheads
+  → Pad creation itself failed (not just the offset property)
+  → Check the error message for more details
+  → This means we need a different approach entirely
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PROBLEM 1: Log shows "BUILD COMPLETE" but only 1 bulkhead in viewport
+  Diagnosis: Sketches created but pads failed
+  Check: Are there [WARN] or [ERROR] messages for the missing bulkheads?
+  Solution: Run again, look for error pattern
+
+PROBLEM 2: Log shows all [✓] but bulkheads appear MERGED in viewport
+  Diagnosis: Pads created, offset property may not have worked
+  Check: Log messages about "Pad offset set to X=XXX mm"
+  Solution:
+    - If offset messages show "✓", then offsetting worked visually but CATIA isn't updating
+      → Try: Rotate the 3D view, click Parts tree, or press F5 to refresh
+    - If offset messages show "[WARN]", then offset property didn't work
+      → See PROBLEM 3 below
+
+PROBLEM 3: Log shows "[WARN] Could not set offset length" AND "[WARN] FirstOffset also failed"
+  Diagnosis: Neither property name matched this CATIA version
+  Impact: All 5 pads created but overlapped at X=0
+  Options:
+    a) Manually move each bulkhead in CATIA to correct X position
+    b) Contact for alternative approach using different property names
+    c) Try using CATIA's Pattern feature to duplicate the main bulkhead
+
+PROBLEM 4: CATIA crashes or freezes
+  Diagnosis: COM error deeper in CATIA
+  Solution:
+    - Restart CATIA completely
+    - Retry
+    - If it crashes at same point, we have a different COM issue
+    - Check if it's an AddNewPad failure (then offset approach won't help)
+
+PROBLEM 5: Log shows "[ERROR] Main bulkhead creation failed"
+  Diagnosis: Something is fundamentally wrong with CATIA or COM
+  Solution:
+    - Verify CATIA is fully started and ready
+    - Close and restart CATIA
+    - Verify Visual Studio project built successfully (no compiler errors)
+
+================================================================================
+SUCCESS CHECKLIST
+================================================================================
+
+Mark [TEST PASS] if ALL of these are true:
+
+  □ Log shows no [ERROR] messages (one or two [WARN] is okay)
+  □ Log shows "BUILD COMPLETE" at the end
+  □ CATIA viewport shows 5 SEPARATE bulkhead frames
+  □ Frames have VISIBLE GAPS between them (not merged)
+  □ Each frame is 200×200mm outer with 10mm walls
+  □ Frames are at X positions: 0, 150, 450, 850, 1200 mm
+  □ Part tree shows Bulkhead_Frame, Bulkhead_150, 450, 850, 1200
+
+Mark [TEST FAIL] if ANY of these are true:
+
+  □ Log shows [ERROR] for main bulkhead or offset planes
+  □ Only 1 bulkhead visible in 3D (others never created)
+  □ Bulkheads appear MERGED into one continuous block
+  □ Part tree is missing any of the 5 bulkhead features
+  □ CATIA crashes or becomes unresponsive
+  □ Bulkheads are at wrong X positions
+
+================================================================================
+IF TEST PASSES
+================================================================================
+
+1. Save the CATIA part file (.CATPart) for reference
+2. Copy and save the log output to a text file (for records)
+3. Take screenshots of:
+   - 3D viewport showing all 5 bulkheads
+   - Part tree showing feature structure
+   - Any interesting details (gaps, alignment, etc.)
+
+Then you can optionally:
+- Edit parametric dimensions (change ReadOnly fields in code)
+- Rebuild solution and retest with different sizes
+- Test with different bulkhead positions
+- Verify hollow frames are truly hollow (not solid)
+
+================================================================================
+IF TEST FAILS
+================================================================================
+
+1. Copy the COMPLETE log output from txtLog
+2. Save a screenshot of the CATIA viewport (showing what was actually created)
+3. Save a screenshot of the Part tree (showing what features exist)
+4. Note any error messages and their exact text
+5. Note the time and your CATIA version
+
+Then either:
+- Re-run and compare results
+- Contact with the log/screenshots for analysis
+- Proceed to fallback approach if needed (see FIX_IMPLEMENTATION_OffsetLength.md)
+
+================================================================================
+NOTES
+================================================================================
+
+- The offset planes visible in the viewport are REFERENCE geometry
+  They show where each bulkhead should be positioned
+  They don't create geometry themselves
+
+- If you see planes but no solid bulkheads, then Step 3 (pad creation) failed
+  Check log for error messages in the "Creating bulkheads" section
+
+- The OffsetLength property approach is the most CATIA-compatible
+  If it works, we've resolved the original COM incompatibility
+
+- All parametric dimensions are still editable in the code
+  Change the ReadOnly fields and rebuild to test different sizes
+
+================================================================================

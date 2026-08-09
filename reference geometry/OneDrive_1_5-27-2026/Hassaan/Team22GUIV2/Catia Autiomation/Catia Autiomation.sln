@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11806.211 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Catia Autiomation", "Catia Autiomation.vbproj", "{1478B843-9E71-420A-BBA8-A58BDD074428}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1478B843-9E71-420A-BBA8-A58BDD074428}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1478B843-9E71-420A-BBA8-A58BDD074428}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1478B843-9E71-420A-BBA8-A58BDD074428}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1478B843-9E71-420A-BBA8-A58BDD074428}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BD6B7CE9-55ED-4FFA-B3C6-EE553974CBE6}
+	EndGlobalSection
+EndGlobal

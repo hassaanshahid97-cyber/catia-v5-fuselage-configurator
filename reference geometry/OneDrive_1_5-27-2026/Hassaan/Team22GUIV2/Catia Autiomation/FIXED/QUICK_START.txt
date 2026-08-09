@@ -1,0 +1,229 @@
+================================================================================
+                        QUICK START GUIDE - TYPE MISMATCH FIX
+================================================================================
+
+WHAT WAS WRONG?
+===============
+Your code got a Type Mismatch error (0x80020005) and Parameter Not Optional
+(0x8002000F) when building the skin solid because it tried to pass a value
+for an optional COM parameter that should be omitted entirely in VB.NET.
+
+
+WHAT GOT FIXED?
+================
+Two locations in BuildSolidFuselage.vb where AddSectionToLoft() was called:
+
+  WRONG: oLoft.AddSectionToLoft(refBhk(0), 1, Nothing)
+  ALSO WRONG: oLoft.AddSectionToLoft(refBhk(0), 1, System.Reflection.Missing.Value)
+  CORRECT: oLoft.AddSectionToLoft(refBhk(0), 1)
+
+Simply OMIT the optional third parameter. That's it!
+
+
+HOW TO USE THE FIXED CODE
+===========================
+
+OPTION 1: Already Fixed! Just Test It
+--------------------------------------
+The code in your project folder is ALREADY fixed. Just:
+1. Recompile: Build > Build Solution (Ctrl+Shift+B)
+2. Start CATIA V5
+3. Run your build code
+4. Watch the log for success
+
+OPTION 2: Manual Review (if you want to see the changes)
+---------------------------------------------------------
+1. Open: CHANGES_DETAIL.txt
+2. See what changed (2 simple edits)
+3. Review the code already in your project
+
+
+FILES IN THIS FOLDER
+====================
+
+BuildSolidFuselage.vb
+  ↓ REFERENCE FILE (showing what the fix looks like)
+
+FIX_SUMMARY.TXT
+  ↓ Detailed explanation of the issue and fix
+
+CHANGES_DETAIL.TXT
+  ↓ Before/after code comparison
+
+QUICK_START.TXT
+  ↓ This file
+
+
+THE FIX IN 30 SECONDS
+======================
+
+Stage 3 - Change this:
+  oLoft.AddSectionToLoft(refBhk(0), 1, Nothing)
+  oLoft.AddSectionToLoft(refBhk(1), 1, Nothing)
+  oLoft.AddSectionToLoft(refBhk(2), 1, Nothing)
+  oLoft.AddSectionToLoft(refBhk(3), 1, Nothing)
+
+To this:
+  oLoft.AddSectionToLoft(refBhk(0), 1)
+  oLoft.AddSectionToLoft(refBhk(1), 1)
+  oLoft.AddSectionToLoft(refBhk(2), 1)
+  oLoft.AddSectionToLoft(refBhk(3), 1)
+
+
+Stage 4 - Change this:
+  For i As Integer = 0 To nSt - 1
+      oLoft.AddSectionToLoft(refProfile(i), 1, Nothing)
+  Next
+
+To this:
+  For i As Integer = 0 To nSt - 1
+      oLoft.AddSectionToLoft(refProfile(i), 1)
+  Next
+
+That's literally the entire fix - just remove the third parameter!
+
+
+STEP-BY-STEP EXECUTION
+=======================
+
+1. CHECK YOUR CODE
+   - Open BuildSolidFuselage.vb
+   - Find the two locations above
+   - Verify they have only 2 parameters, not 3
+
+2. RECOMPILE
+   - Visual Studio: Build > Build Solution (Ctrl+Shift+B)
+   - Should compile with NO errors
+
+3. RUN THE BUILD
+   - Call from your Form:
+
+     Private Sub Button1_Click(...) Handles Button1.Click
+         Dim builder As New BuildSolidFuselage()
+         builder.Run(AddressOf LogMessage)
+     End Sub
+
+     Private Sub LogMessage(msg As String)
+         TextBox1.AppendText(msg & vbCrLf)
+     End Sub
+
+4. WATCH THE LOG
+   You should see:
+
+   == Findus UAV : SOLID FUSELAGE BUILD ==
+   Stage 1: connect + create new Part...
+   ...
+   Stage 3: outer-skin solid...
+      Loft surface     : Fuselage_OML
+      End-caps         : nose + tail
+      Closed shell     : Fuselage_Shell
+      SOLID skin       : PartBody [OK]
+   ...
+   Stage 4: 4 longeron solids...
+      - Lgrn_TopPort ...
+      - Lgrn_TopStbd ...
+      - Lgrn_BotPort ...
+      - Lgrn_BotStbd ...
+      4 longerons built (each in its own Body).
+
+   == BUILD COMPLETE ==
+
+
+EXPECTED OUTPUT (SUCCESS)
+=========================
+
+== Findus UAV : SOLID FUSELAGE BUILD ==
+Stage 1: connect + create new Part...
+   New Part created : Part1.CATPart
+
+Stage 2: bulkhead splines (OML)...
+   4 bulkhead splines : X = 150, 700, 850, 1400 mm
+
+Stage 3: outer-skin solid...
+   Loft surface     : Fuselage_OML
+   End-caps         : nose + tail
+   Closed shell     : Fuselage_Shell
+   SOLID skin       : PartBody [OK]
+
+Stage 4: 4 longeron solids...
+   - Lgrn_TopPort ...
+   - Lgrn_TopStbd ...
+   - Lgrn_BotPort ...
+   - Lgrn_BotStbd ...
+   4 longerons built (each in its own Body).
+
+== BUILD COMPLETE ==
+
+
+EXPECTED OUTPUT (PARTIAL SUCCESS - CloseSurface fails, normal)
+==============================================================
+
+...same as above, except Stage 3 shows:
+
+Stage 3: outer-skin solid...
+   Loft surface     : Fuselage_OML
+   End-caps         : nose + tail
+   Closed shell     : Fuselage_Shell
+   [!] CloseSurface skipped - surfaces created but not closed to solid
+       Manually close via: Insert > Surface-Based Features > Close Surface
+
+This is OK! All geometry was created. Just close surfaces manually in CATIA.
+
+
+TROUBLESHOOTING
+===============
+
+Q: Still getting Type Mismatch or Parameter Not Optional?
+A: Make sure you removed the third parameter entirely. Don't use:
+   - Nothing (causes Type Mismatch)
+   - System.Reflection.Missing.Value (causes Parameter Not Optional)
+
+   Only use: oLoft.AddSectionToLoft(refBhk(0), 1)
+
+Q: Getting "CATIA is not running"?
+A: Start CATIA V5 BEFORE running the build:
+   1. Open CATIA V5
+   2. Wait for it to fully load
+   3. THEN run your VB.NET program
+
+Q: Build runs but CloseSurface fails?
+A: This is a known CATIA limitation, not a code error. Close manually:
+   1. CATIA window shows the part
+   2. Select "Fuselage_Shell" in the tree
+   3. Insert > Surface-Based Features > Close Surface
+   4. Repeat for each longeron join if needed
+
+Q: Different error?
+A: See FIX_SUMMARY.txt for more troubleshooting.
+
+
+VERIFICATION CHECKLIST
+======================
+
+[ ] BuildSolidFuselage.vb in your project has 2-parameter calls
+[ ] No AddSectionToLoft calls have a third parameter (Nothing or Missing)
+[ ] Project recompiled (no errors)
+[ ] CATIA is running before executing
+[ ] Button clicked to start build
+[ ] Log shows Stage 3 without errors
+[ ] Log shows Stage 4 completing all 4 longerons
+[ ] Log shows "== BUILD COMPLETE =="
+
+If all boxes checked ✓ - You're done! The fix worked.
+
+
+KEY DIFFERENCES: VBScript vs VB.NET
+====================================
+
+VBScript (CATIA macro):
+  oLoft.AddSectionToLoft refBhk(0), 1, Nothing  ← WORKS
+  oLoft.AddSectionToLoft refBhk(0), 1           ← Also works
+
+VB.NET (.NET code):
+  oLoft.AddSectionToLoft(refBhk(0), 1, Nothing)             ← FAILS
+  oLoft.AddSectionToLoft(refBhk(0), 1, Missing.Value)       ← FAILS
+  oLoft.AddSectionToLoft(refBhk(0), 1)                      ← WORKS!
+
+In VB.NET, ALWAYS omit optional COM parameters. Don't try to pass Nothing.
+
+================================================================================

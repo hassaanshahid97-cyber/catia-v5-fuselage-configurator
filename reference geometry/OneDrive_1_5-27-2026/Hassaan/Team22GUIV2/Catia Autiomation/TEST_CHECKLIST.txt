@@ -1,0 +1,188 @@
+==============================================================================
+CATIA UAV BULKHEAD POWERCOPY - TEST CHECKLIST
+==============================================================================
+Date: May 26, 2026
+Updated Code: BuildSolidFuselage.vb (Offset Planes Fix)
+
+==============================================================================
+BEFORE RUNNING TEST
+==============================================================================
+
+□ CATIA V5 is running and visible
+□ Visual Studio project is built (Rebuild solution)
+□ Form1 window is accessible
+□ CATIA Part window is open and ready
+□ No other active CATIA operations
+
+==============================================================================
+EXECUTION STEPS
+==============================================================================
+
+1. □ Click "Connect" button in Form1
+   - Wait for execution to complete
+   - Monitor the log output in txtLog textbox
+
+2. □ Check CATIA 3D viewport
+   - Look for 5 separate hollow rectangular frames
+   - NOT a single merged solid block
+
+==============================================================================
+SUCCESS CRITERIA
+==============================================================================
+
+✓ MUST SEE (All required):
+
+  1. Log output shows "[✓]" for:
+     - "Main bulkhead created successfully"
+     - "All offset planes created"
+     - "Bulkhead_150 created at X=150 mm"
+     - "Bulkhead_450 created at X=450 mm"
+     - "Bulkhead_850 created at X=850 mm"
+     - "Bulkhead_1200 created at X=1200 mm"
+     - "BUILD COMPLETE"
+
+  2. CATIA 3D view shows:
+     - First hollow rectangular frame (main bulkhead) at X=0-20mm
+     - Second frame at X=150-170mm (clear gap from first)
+     - Third frame at X=450-470mm
+     - Fourth frame at X=850-870mm
+     - Fifth frame at X=1200-1220mm
+     - DISCRETE FRAMES, NOT MERGED
+
+  3. Part tree shows 5 separate Bulkhead Pad features:
+     - Bulkhead_Frame (main, at X=0)
+     - Bulkhead_150
+     - Bulkhead_450
+     - Bulkhead_850
+     - Bulkhead_1200
+
+  4. HybridBodies container:
+     - "Offset_Planes" group visible
+     - Contains 4 offset plane objects
+
+==============================================================================
+POTENTIAL ISSUES & REMEDIES
+==============================================================================
+
+ISSUE: Log shows [WARN] "Bulkhead_XXX creation failed"
+------
+  Symptom: Some bulkheads not created, but main one is OK
+  Action:  Check error message in log for details
+  Remedy:  Might indicate COM issue with offset planes
+           → Try alternative approach (contact for next iteration)
+
+ISSUE: All bulkheads appear MERGED into one solid block
+------
+  Symptom: Single continuous block instead of 5 frames
+  Problem: Offset planes not being used correctly for padding
+  Action:
+    1. Check if sketches are on correct planes
+    2. Verify offset plane positions in Part tree
+    3. Look for error messages about "PadPlane" or "OriginPlaneOffset"
+  Remedy:  Next iteration: Try Pad with OriginPlaneOffset property
+           or use alternative sketch positioning method
+
+ISSUE: CATIA crashes or returns COM errors
+------
+  Symptom: Application error dialog or unhandled exception
+  Action:  Check exact error message in log before crash
+  Remedy:  Restart CATIA and retry
+           If persistent, error is likely in offset plane handling
+
+ISSUE: Only main bulkhead created, others missing
+------
+  Symptom: Only "Bulkhead_Frame" in part tree, 4 others not there
+  Problem: Offset plane creation or pad creation loop failing silently
+  Action:
+    1. Check log for [ERROR] or [WARN] messages
+    2. Look at exact line where error occurs
+    3. Verify CATIA part is not read-only or locked
+  Remedy:  May need to add more detailed error logging
+
+ISSUE: Offset planes visible but bulkheads not created on them
+------
+  Symptom: Can see 4 offset planes in Part tree under "Offset_Planes"
+           but no corresponding bulkheads
+  Problem: Sketch or pad creation failing on offset plane references
+  Action:  Check if "Sketch_150", "Sketch_450" etc. are in Part tree
+           If they exist, pad creation is the issue
+           If they don't exist, sketch creation is the issue
+  Remedy:  Next iteration: Different approach for sketch/pad creation
+
+==============================================================================
+DATA TO COLLECT IF ISSUES FOUND
+==============================================================================
+
+Copy from Form1 log textbox and save to file:
+□ Full log output from start to finish
+□ Screenshot of CATIA 3D view (showing what was created)
+□ Screenshot of Part tree (showing features and HybridBodies)
+□ Screenshot of any error dialogs
+
+Provide:
+- Windows PowerShell output from Build (if rebuild errors)
+- CATIA debug output (if available)
+- Project file paths and versions
+
+==============================================================================
+EXPECTED DIMENSIONS (Verify in CATIA)
+==============================================================================
+
+Each Bulkhead Frame:
+  Outer:     200mm × 200mm
+  Frame:     10mm walls
+  Thickness: 20mm extrusion along X-axis
+
+Positions along X-axis:
+  Bulkhead_Frame: X=0 to X=20mm
+  Bulkhead_150:   X=150 to X=170mm
+  Bulkhead_450:   X=450 to X=470mm
+  Bulkhead_850:   X=850 to X=870mm
+  Bulkhead_1200:  X=1200 to X=1220mm
+
+Gaps between frames:
+  Between main & 150:   130mm gap
+  Between 150 & 450:    280mm gap
+  Between 450 & 850:    380mm gap
+  Between 850 & 1200:   330mm gap
+
+==============================================================================
+NEXT STEPS (If test PASSES)
+==============================================================================
+
+□ Verify all dimensions match expectations
+□ Check that frames are truly hollow (not solid blocks)
+□ Save CATIA part file (.CATPart) for reference
+□ Update parametric dimensions and retest
+   (Edit ReadOnly fields, rebuild, run again)
+□ Test with different dimensions (e.g., 250×250mm, 15mm walls)
+
+==============================================================================
+NEXT STEPS (If test FAILS)
+==============================================================================
+
+□ Analyze error message to determine root cause
+□ Check CATIA COM compatibility
+□ Consider alternative approaches:
+   1. Use Pad's OriginPlaneOffset property for positioning
+   2. Create sketches on PartBody with Pad offset
+   3. Use different CATIA feature type (Pocket, Shaft, etc.)
+   4. Create separate bodies for each bulkhead
+□ Request next iteration of code fix
+
+==============================================================================
+TEST COMPLETE
+==============================================================================
+
+Mark as:
+  [PASS] - 5 discrete bulkheads created correctly
+  [FAIL] - Issues encountered (see section above)
+  [PARTIAL] - Some bulkheads created, others failed
+
+Date Tested: __________
+Tester: __________
+Notes: ________________________________________________________
+________________________________________________________
+________________________________________________________
+
+==============================================================================
