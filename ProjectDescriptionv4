@@ -1,0 +1,149 @@
+% =============================================================================
+%  Project Description / Proposal -- TMKT57 Product Modelling, VT 2026
+%  UAV Fuselage and Landing Gear Configurator -- Team Findus (sub-team 2)
+%  Sister team: Group 21 (Tudor Marin, Ameer Abbas Abbood Abbood) -- Wing & Empennage
+%
+%  Compile: pdflatex ProjectDescription.tex   (twice for cross-refs)
+%  Image:   pic/uav_layout.png  (relative to this .tex file)
+% =============================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=2cm,top=1.8cm,bottom=2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{liublue}{RGB}{0,82,147}
+\titleformat{\section}{\bfseries\normalsize\color{liublue}}{}{0pt}{}[\vspace{-0.35em}\rule{\linewidth}{0.4pt}]
+\titlespacing*{\section}{0pt}{0.55em}{0.25em}
+\setlist[itemize]{leftmargin=1.4em,topsep=2pt,itemsep=2pt,parsep=0pt}
+\renewcommand{\arraystretch}{1.12}
+
+\begin{document}
+
+% ---------------------------------------------------------------- title ------
+\begin{center}
+{\LARGE\bfseries Product Modelling (TMKT57)}\\[0.2em]
+{\large UAV Fuselage and Landing Gear Configurator}\\[0.2em]
+{\normalsize \textit{Team Findus -- SAE AeroDesign Brasil 2026}}
+\end{center}
+
+\vspace{0.2em}
+
+\noindent\textbf{Group 22 -- Findus Team 2 (Fuselage \& Landing Gear)}
+
+\vspace{0.2em}
+\noindent\textbf{Team members}\\[0.1em]
+\begin{tabularx}{\linewidth}{@{} X r @{}}
+Hassaan Shahid                                              & ddssh446 \\
+Momin Khan                                                  & momkh557 \\
+Sachin Chandima Abeysinghe Abeysinghe Herath Mudiyanselage  & sacab452 \\
+\end{tabularx}
+
+\vspace{0.1em}
+Group 21\noindent\footnotesize\textit{Sister sub-team: Group 21 -- Findus Team 1 (Wing \& Empennage), Tudor Marin (tudma691), Ameer Abbas Abbood Abbood (ameab910).}\normalsize
+
+\vspace{0.3em}\hrule\vspace{0.3em}
+
+% ---------------------------------------------------------- challenge --------
+\section*{Project design challenge}
+Develop a parametric, mission-profile-driven configurator in CATIA V5, controlled from a Visual Studio (VB.NET) GUI, that generates the internal \textbf{semi-monocoque fuselage} structure and the \textbf{landing-gear placement} of the UAV that Team Findus is building for the SAE AeroDesign Brasil 2026 competition. The wing and empennage of the same aircraft are being modelled in parallel by Findus Team 1 (Group 21).
+
+% ----------------------------------------------------------- motivation ------
+\section*{Motivation}
+\begin{itemize}
+    \item The fuselage internal layout (battery, motor, ESC, flight controller, payload bay) is the part of the UAV that gets re-arranged the most as the mission profile changes during the conceptual phase. Driving the layout from a mission-profile form removes most of the manual repositioning work.
+    \item Semi-monocoque structures consist of repetitive bulkheads, frames, stringers and longerons -- a textbook case for PowerCopy reuse.
+    \item Landing-gear position depends on the centre of gravity, which itself depends on the placement of the heavy payload items. Computing the CG inside the GUI and feeding it back to the gear position closes the loop and removes a hand-iteration that otherwise costs a full afternoon.
+    \item A clean GUI lets the rest of Team Findus (aerodynamics, propulsion, manufacturing) try variants without opening CATIA, and a SQLite library of standard mission profiles makes the tool re-usable for next year's competition.
+    \item PowerCopies + clean code + database integration map directly to the Grade-5 examination criteria.
+\end{itemize}
+
+% ----------------------------------------------------------- description ----
+\section*{Project description}
+The user enters a \emph{mission profile} into the Visual Studio form, payload mass and dimensions, target endurance, take-off run, motor / battery class and the configurator does the rest. The VB.NET layer reads the inputs, computes a fuselage length, a bulkhead spacing and the longitudinal position of every internal item from a small set of sizing rules, runs a CG calculation over the placed masses, and drives the CATIA V5 model through the interop API. Reference geometry lives in a single \texttt{References.CATPart} skeleton; PowerCopies for the bulkhead, frame, stringer, longeron and lightening cut-out are stored separately and instantiated programmatically along the skeleton.
+
+The configurator is built around five reusable PowerCopies: a \textbf{Bulkhead} (parametric on fuselage cross-section, instantiated at every payload boundary), a \textbf{Frame} (lighter intermediate ring between bulkheads, instantiated along the fuselage), a \textbf{Stringer} and \textbf{Longeron} pair (longitudinal stiffeners, instantiated around the perimeter), and a \textbf{Lightening cut-out} (instantiated on every bulkhead and frame for weight efficiency). The landing-gear strut + wheel pair is instantiated upon the strut PowerCopy at the X-station produced by the CG solver this is the instantiation-upon-instantiation case required for Grade 4. A SQLite database stores standard mission profiles (\emph{light cargo, endurance, max-payload}) so the user can save, reload and compare variants from the GUI.
+
+% ----------------------------------------------------------- schematic -------
+\section*{Graphical representation}
+
+\begin{figure}[htbp]
+    \centering
+    % First image
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{pic/proposal image.PNG}
+    \end{minipage}\hfill
+    % Second image
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{image.png}
+    \end{minipage}
+    
+    % Shared caption
+    \caption{Reference UAV layout used as the target for the configurator. The numbered labels mark the fuselage payload and structural items the GUI will place automatically.}
+    \label{fig:combined_uav}
+\end{figure}
+Figure 1 displays a representative 3D CAD model of a small fixed-wing UAV, serving as the target layout for the configurator. The isometric, transparent-fuselage view exposes the internal arrangement of the components the configurator is responsible for placing automatically. These include the propulsion group at the nose (motor placement), the main flight battery, internal electronics (such as the ESC and flight controller), the landing gear placement, and the structural constraints dictating the length of the fuselage. The wings, empennage, and tail-boom labeled here as Group 21 to represent the aerodynamic structures handled by the rest of the team are shown to provide context for the overall airframe integration and where the fuselage boundaries end. This render illustrates the type of internal layout visualization the configurator will automatically generate for any mission profile inputted into the GUI.
+
+% ----------------------------------------------------------- parameters ------
+\section*{Primary parameters}
+\textbf{Mission profile (GUI inputs):}\ payload mass, payload bounding box, target endurance, take-off run, motor / battery class, climb performance.\\
+\textbf{Fuselage geometry (computed):}\ \texttt{Fuselage\_Length}, \texttt{Fuselage\_Width}, \texttt{Fuselage\_Height}, \\\texttt{Number\_of\_Bulkheads}, \texttt{Number\_of\_Frames}, \texttt{Stringer\_Count}, \texttt{Longeron\_Count}, \texttt{Lightening\_Hole\_Pattern}.\\
+\textbf{Internal payload (placed by the GUI):}\ battery (mass, X-station), motor (mass, X-station = 0), ESC (X-station), flight controller (X-station), receiver / GPS, optional cargo bay.\\
+\textbf{Landing gear (CG-based):}\ \texttt{Gear\_Station\_X} (computed from the CG solver), \texttt{Gear\_Type} (tail-dragger / tricycle), \texttt{Wheel\_Diameter}, \texttt{Wheel\_Width}, \texttt{Wheels\_per\_Strut}.\\
+\textbf{Configuration metadata (SQLite, Grade 5):}\ \texttt{Config\_Name}, \texttt{Date\_Created}, \texttt{Mission\_Profile}, \texttt{Notes}.
+
+% ----------------------------------------------------------- aim -------------
+\section*{Aim / technical goals (Grade 5)}
+\begin{itemize}
+    \item Apply SAE AeroDesign Brasil 2026 design constraints (shipping-box dimensions, max take-off mass) inside the GUI as hard limits on the parameters.
+    \item Standardise structural member sizes (balsa thicknesses, plywood thicknesses, spruce stringer cross-sections) so the output can go straight to manufacturing.
+    \item Automatic instantiation of bulkheads, frames, stringers, longerons and lightening cut-outs through PowerCopies.
+    \item Instantiation-upon-instantiation for the wheel on the strut, with the strut placed at the CG-driven station.
+    \item GitLab LiU activity (commits / branches / merge requests) as Grade-5 proof of individual activity, at least two commits per member per week.
+    \item SQLite save / load of mission profiles + standard configurations from the GUI.
+\end{itemize}
+
+% --------------------------------------------------------- responsibilities --
+\section*{Responsibilities \& Milestones}
+\noindent
+\begin{tabularx}{\linewidth}{@{} l X @{}}
+\toprule
+\multicolumn{2}{@{}l}{\textbf{Milestone 1 -- Reference geometry, bulkheads and first PowerCopy (Weeks 17--18)}}\\
+\midrule
+Hassaan & Fuselage reference skeleton in \texttt{References.CATPart} (no Hybrid Design); \texttt{Skeleton} and \texttt{To\_Copy} sets. \\
+Momin   & GitLab repository, \texttt{.gitignore}, README, weekly log; VS project scaffolding from \texttt{TMKT57\_IE\_template}. \\
+Sachin  & Bulkhead PowerCopy template; manual smoke test inside \texttt{References.CATPart}. \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Milestone 2 -- Semi-monocoque structure and internal payload (Weeks 19--20, Grade 3 / 4 target)}}\\
+\midrule
+Hassaan & Stringer + Longeron PowerCopies, weight-reduction cut-out PowerCopy. \\
+Momin   & VB.NET frame/bulkhead instantiation loop; CG solver in \texttt{CatiaHelpers.vb}; placement of battery / ESC / flight controller. \\
+Sachin  & Strut + Wheel PowerCopies with instantiation-upon-instantiation, gear placed at the CG-derived X-station. \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Milestone 3 -- Mission-profile GUI, database, deliverables (Weeks 21--22, Grade 5 target)}}\\
+\midrule
+Hassaan & SQLite schema, three standard mission profiles seeded, \texttt{DataAccess.vb} CRUD layer. \\
+Momin   & Dynamic GUI (live validation, save / load, change-after-placement), CG dashboard, integration testing. \\
+Sachin  & A1 poster, final report, demo recording for the examination. \\
+\bottomrule
+\end{tabularx}
+
+% ----------------------------------------------------------- timeline --------
+\section*{Timeline}
+Week-by-week activity is tracked in \texttt{docs/WeeklyLog.md} on GitLab LiU and committed at the end of every week. GitLab history (commits, branches, merge requests) is the timeline evidence for the examination, the Grade-5 criterion of \emph{proof of individual activity}. Joint milestones with Findus Team 1 are agreed at the end of each milestone so the wing / tail and the fuselage interface (wing-spar carry-through, tail-boom mount) stay compatible.
+
+
+\end{document}
